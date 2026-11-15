@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Caça-Bugs JS</title>
+<meta name="description" content="Jogo para treinar lógica em JavaScript encontrando erros no código.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+:root{--bg:#f4f5f9;--card:#fff;--fg:#1c2030;--muted:#6a7088;--accent:#5b5bf0;--ok:#1f9d55;--bad:#d64545;--code:#1e2233;--codefg:#e6e9f5;--line:#dfe2ee;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12141d;--card:#1b1e2b;--fg:#eceef7;--muted:#9aa0b8;--accent:#8686ff;--ok:#3ec97a;--bad:#ff6b6b;--code:#0d0f17;--line:#2c3044}}
+:root[data-theme="dark"]{--bg:#12141d;--card:#1b1e2b;--fg:#eceef7;--muted:#9aa0b8;--accent:#8686ff;--ok:#3ec97a;--bad:#ff6b6b;--code:#0d0f17;--line:#2c3044}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+main{max-width:640px;margin:0 auto;padding:16px}
+h1{font-size:1.4rem;margin:8px 0 2px}
+.sub{color:var(--muted);margin:0 0 16px;font-size:.95rem}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600;margin-bottom:8px;flex-wrap:wrap}
+.pill{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:4px 12px;font-size:.9rem}
+.prog{height:8px;background:var(--line);border-radius:9px;overflow:hidden;margin-bottom:16px}
+.prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+.t-k,.t-o{color:#ff79c6}.t-s{color:#f1fa8c}.t-n{color:#bd93f9}.t-c{color:#6272a4}.t-f{color:#50fa7b}.t-d{color:#8be9fd;font-style:italic}
+.tag{font-size:.8rem;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+pre{background:var(--code);color:var(--codefg);border-radius:12px;padding:14px;margin:10px 0 14px;overflow-x:auto;font:.9rem/1.5 "JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+.q{font-weight:700;margin:0 0 10px}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;font:inherit;color:var(--fg);background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt:disabled{cursor:default}
+.opt.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,var(--bg))}
+.opt.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 15%,var(--bg))}
+.fb{margin-top:14px;padding:12px;border-radius:12px;background:var(--bg);border-left:4px solid var(--accent);display:none}
+.fb.show{display:block}
+.fb b.ok{color:var(--ok)}.fb b.bad{color:var(--bad)}
+.btn{margin-top:12px;font:inherit;font-weight:700;color:#fff;background:var(--accent);border:0;border-radius:12px;padding:12px 18px;cursor:pointer;width:100%}
+.end{text-align:center}
+.big{font-size:3rem;margin:0}
+.hide{display:none!important}
+.win{border-radius:12px;overflow:hidden;background:var(--code);margin:10px 0 14px}
+.wbar{display:flex;gap:6px;align-items:center;padding:8px 12px;background:rgba(255,255,255,.07)}
+.wbar i{width:10px;height:10px;border-radius:50%;background:#ff5f56}
+.wbar i:nth-child(2){background:#ffbd2e}.wbar i:nth-child(3){background:#27c93f}
+.wbar span{margin-left:8px;color:#9aa0b8;font:.8rem "JetBrains Mono",ui-monospace,Menlo,monospace}
+.win pre{margin:0;border-radius:0}
+code{counter-reset:l}
+.ln{display:block;min-height:1.5em;white-space:pre}
+.ln::before{counter-increment:l;content:counter(l);display:inline-block;width:2ch;margin-right:1.4ch;color:#5b6180;text-align:right}
+.hero{margin-bottom:4px}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.tabs{display:flex;gap:6px;margin:14px 0 10px;overflow-x:auto;padding-bottom:4px}
+.tab{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:99px;padding:6px 12px;cursor:pointer;white-space:nowrap}
+.tab.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer}
+.row:hover{border-color:var(--accent)}
+.num{font-weight:800;color:var(--accent);min-width:2ch}
+.rt{flex:1;display:flex;flex-direction:column}
+.rt small{color:var(--muted)}
+.chip{font-size:.8rem;border-radius:99px;padding:2px 10px;border:1px solid var(--line);white-space:nowrap}
+.chip.done{color:var(--ok);border-color:var(--ok)}.chip.fail{color:var(--bad);border-color:var(--bad)}
+.link{background:none;border:0;color:var(--muted);font:inherit;cursor:pointer;text-decoration:underline;padding:8px 0}
+.lbl{font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-top:10px}
+.nav{display:flex;gap:6px;margin:0 0 12px}
+.nav .tab{flex:1;text-align:center;font-weight:700}
+#ltitle{margin:4px 0 8px}
+h1,h2,.tag,.num{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace}
+pre,code,.ln,.wbar span{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;font-size:inherit;font-variant-ligatures:contextual}
+pre{background:#282a36;color:#f8f8f2}
+.win{background:#282a36}
+.wbar{background:#21222c}
+.wbar span,.ln::before{color:#6272a4}
+.av{width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;color:#fff;background:var(--accent);margin-right:8px}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:.9rem;margin-top:10px}
+.rk{display:flex;gap:10px;align-items:center;padding:8px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:6px;background:var(--card)}
+.rk.me{border-color:var(--accent)}
+.rk b{flex:1}
+.fld{display:block;font-size:.85rem;font-weight:600;margin-top:10px}
+.fld input{display:block;width:100%;margin-top:4px;font:inherit;padding:10px 12px;border:2px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg)}
+.fld input:focus{outline:none;border-color:var(--accent)}
+.err{color:var(--bad);min-height:1.2em;margin:8px 0 0;font-size:.9rem}
+.nav .tab{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style>
+</head>
+<body>
+<main>
+  <h1>🐞 Caça-Bugs JS</h1>
+  <p class="sub" id="rank"></p>
+  <nav class="nav"><button class="tab on" id="nGame">🎮 Jogar</button><button class="tab" id="nLearn">📘 Aprender</button><button class="tab" id="nAcc">👤 Conta</button></nav>
+
+  <section id="board">
+    <div class="card hero">
+      <div class="bar"><b id="lvl"></b><span class="pill" id="xptxt"></span></div>
+      <div class="prog" style="margin-bottom:0"><i id="xpbar"></i></div>
+      <div class="stats" id="stats"></div>
+      <button class="btn" id="cont"></button>
+    </div>
+    <div class="tabs" id="ltabs"></div>
+    <div class="tabs" id="tabs"></div>
+    <div id="list"></div>
+    <button class="link" id="reset">Zerar progresso</button>
+  </section>
+
+  <section id="play" class="hide">
+    <div class="bar">
+      <button class="link" id="back">← Painel</button>
+      <span class="pill" id="pinfo"></span>
+      <span class="pill" id="streak"></span>
+    </div>
+    <div class="card">
+      <div class="tag" id="tag"></div>
+      <div class="win">
+        <div class="wbar"><i></i><i></i><i></i><span id="fname"></span></div>
+        <pre><code id="code"></code></pre>
+      </div>
+      <p class="q">Qual é o erro nesse código?</p>
+      <div class="opts" id="opts"></div>
+      <div class="fb" id="fb"></div>
+      <button class="btn hide" id="next"></button>
+    </div>
+  </section>
+  <section id="account" class="hide">
+    <div class="card" id="acOut">
+      <div class="tabs" id="acTabs"><button class="tab on" data-m="in">Entrar</button><button class="tab" data-m="up">Criar conta</button></div>
+      <label class="fld">Usuário<input id="fUser" autocomplete="username" maxlength="20" placeholder="ex: ana_dev"></label>
+      <label class="fld">Senha<input id="fPass" type="password" autocomplete="current-password" placeholder="mínimo 6 caracteres"></label>
+      <label class="fld hide" id="fPass2w">Confirmar senha<input id="fPass2" type="password" autocomplete="new-password"></label>
+      <label class="chk hide" id="fMoveW"><input type="checkbox" id="fMove" checked> Copiar meu progresso atual (convidado) para a nova conta</label>
+      <p class="err" id="acErr"></p>
+      <button class="btn" id="acGo">Entrar</button>
+      <p class="sub">A conta fica salva neste aparelho, no navegador. Para usar em outro aparelho, crie outra conta lá.</p>
+    </div>
+    <div class="card hide" id="acIn">
+      <div class="bar"><b id="acName"></b><span class="pill" id="acSt"></span></div>
+      <p class="sub" id="acInfo"></p>
+      <button class="btn" id="acOutBtn">Sair da conta</button>
+      <button class="link" id="acDel">Excluir conta</button>
+    </div>
+    <h3 id="rkT">🏆 Ranking</h3>
+    <div id="rkList"></div>
+  </section>
+
+  <section id="learn" class="hide">
+    <p class="sub">Aprenda o básico da sintaxe antes de caçar bugs. Cada aula dá +15 XP ao acertar o quiz.</p>
+    <div id="llist"></div>
+  </section>
+
+  <section id="lesson" class="hide">
+    <button class="link" id="lback">← Aulas</button>
+    <div class="card">
+      <div class="tag" id="ltag"></div>
+      <h2 id="ltitle"></h2>
+      <p id="ltext"></p>
+      <div class="win">
+        <div class="wbar"><i></i><i></i><i></i><span id="lfile"></span></div>
+        <pre><code id="lcode"></code></pre>
+      </div>
+      <p class="q" id="lq"></p>
+      <div class="opts" id="lopts"></div>
+      <div class="fb" id="lfb"></div>
+      <button class="btn hide" id="lnext"></button>
+    </div>
+  </section>
+</main>
+
+<script>
+const QUESTIONS = [
+ {tag:"Funções", code:"function soma(a, b) {\n  a + b;\n}\nconsole.log(soma(2, 3));",
+  o:["A função não tem return, então devolve undefined","Falta declarar as variáveis a e b com let","O operador + não funciona com números","console.log não pode receber função"],c:0,
+  e:"Sem return, a função executa a soma mas não devolve nada. O resultado impresso é undefined.",f:"return a + b;"},
+ {tag:"Condições", code:"let idade = 18;\nif (idade = 18) {\n  console.log(\"Maior de idade\");\n}",
+  o:["Falta else no if","Usou = (atribuição) em vez de === (comparação)","idade deveria ser string","if não aceita números"],c:1,
+  e:"Com = o valor 18 é atribuído à variável e a condição vira sempre verdadeira. Para comparar, use === .",f:"if (idade === 18) {"},
+ {tag:"Laços", code:"const frutas = [\"maçã\", \"uva\", \"pera\"];\nfor (let i = 0; i <= frutas.length; i++) {\n  console.log(frutas[i]);\n}",
+  o:["O laço deveria usar var","frutas.length vale 2","A condição <= passa do último índice e imprime undefined","Arrays não podem ser percorridos com for"],c:2,
+  e:"Os índices vão de 0 a length - 1. Com <= o laço roda mais uma vez e frutas[3] é undefined.",f:"i < frutas.length"},
+ {tag:"Variáveis", code:"const total = 10;\ntotal = total + 5;\nconsole.log(total);",
+  o:["total + 5 não é permitido","Falta ponto e vírgula depois de 10","console.log não imprime const","Tentou reatribuir uma constante, o que gera TypeError"],c:3,
+  e:"Variáveis const não podem ser reatribuídas. Se o valor muda, use let.",f:"let total = 10;"},
+ {tag:"Tipos", code:"let a = \"5\";\nlet b = 3;\nconsole.log(a + b); // esperado: 8",
+  o:["O + concatena porque a é string, resultando em \"53\"","b deveria ser string","console.log soma errado","let não permite números"],c:0,
+  e:"Quando um dos lados é string, o + concatena. Converta antes: Number(a) + b.",f:"console.log(Number(a) + b);"},
+ {tag:"Laços", code:"let i = 0;\nwhile (i < 5) {\n  console.log(i);\n}",
+  o:["while não aceita números","i deveria começar em 1","console.log dentro do laço é proibido","i nunca é incrementado, então o laço é infinito"],c:3,
+  e:"A condição i < 5 nunca fica falsa porque i não muda. Falta i++ dentro do laço.",f:"console.log(i);\n  i++;"},
+ {tag:"Arrays", code:"const nums = [1, 2, 3];\nconsole.log(nums.length());",
+  o:["length é propriedade, não método: o certo é nums.length","nums precisa ser let","O array deveria ter 4 itens","length só funciona em strings"],c:0,
+  e:"length é uma propriedade. Usar parênteses causa TypeError: nums.length is not a function.",f:"nums.length"},
+ {tag:"Escopo", code:"function calcular() {\n  let resultado = 42;\n}\ncalcular();\nconsole.log(resultado);",
+  o:["calcular deveria receber parâmetro","42 não pode ser guardado em let","resultado existe só dentro da função (erro de escopo)","Falta chamar calcular duas vezes"],c:2,
+  e:"let tem escopo de bloco. Fora da função, resultado não existe (ReferenceError). Retorne o valor com return.",f:"return resultado;  // e use: const r = calcular();"},
+ {tag:"Arrays", code:"const nums = [1, 2, 3];\nconst dobro = nums.forEach(n => n * 2);\nconsole.log(dobro);",
+  o:["n * 2 é inválido","forEach não retorna um novo array, dobro fica undefined","nums deveria ser objeto","Falta return dentro de console.log"],c:1,
+  e:"forEach só percorre e devolve undefined. Para criar um novo array transformado, use map.",f:"nums.map(n => n * 2)"},
+ {tag:"Números", code:"if (0.1 + 0.2 === 0.3) {\n  console.log(\"Igual!\");\n} else {\n  console.log(\"Diferente!\");\n}\n// esperado: Igual!",
+  o:["O else está no lugar errado","=== não funciona com números","Números decimais em ponto flutuante têm imprecisão: 0.1 + 0.2 dá 0.30000000000000004","0.3 deveria ser string"],c:2,
+  e:"Decimais binários são imprecisos. Compare com tolerância: Math.abs(x - y) < Number.EPSILON.",f:"Math.abs((0.1 + 0.2) - 0.3) < Number.EPSILON"},
+ {tag:"Recursão", code:"function fatorial(n) {\n  return n * fatorial(n - 1);\n}\nconsole.log(fatorial(5));",
+  o:["n * ... não é permitido","fatorial não pode chamar a si mesma","Falta o parâmetro padrão","Falta o caso base: a recursão nunca para (estouro de pilha)"],c:3,
+  e:"Toda recursão precisa de um caso base. Aqui, nunca chega a parar e dá RangeError.",f:"if (n <= 1) return 1;"},
+ {tag:"Comparações", code:"const x = Number(\"abc\");\nif (x === NaN) {\n  console.log(\"Não é um número\");\n}",
+  o:["NaN nunca é igual a nada, nem a si mesmo; use Number.isNaN(x)","Number não converte strings","O if deveria usar ==","x precisa ser let"],c:0,
+  e:"NaN === NaN é false. A forma correta de checar é Number.isNaN(x).",f:"if (Number.isNaN(x)) {"},
+ {tag:"Assíncrono", code:"async function carregar() {\n  const resp = fetch(\"/api/dados\");\n  const dados = await resp.json();\n  console.log(dados);\n}",
+  o:["json() não existe","Falta await no fetch: resp é uma Promise, não a resposta","async não pode usar await","console.log deveria vir antes"],c:1,
+  e:"fetch retorna uma Promise. Sem await, resp.json não existe nela e dá erro.",f:"const resp = await fetch(\"/api/dados\");"},
+ {tag:"Strings", code:"const nome = \"Ana\";\nnome[0] = \"E\";\nconsole.log(nome); // esperado: Eva?",
+  o:["Falta usar const","Strings são imutáveis: não dá para trocar um caractere pelo índice","Índices começam em 1","nome precisa ser array"],c:1,
+  e:"Strings são imutáveis em JS. A atribuição é ignorada. Crie uma nova string, por exemplo \"E\" + nome.slice(1).",f:"const novo = \"E\" + nome.slice(1);"}
+,
+ {tag:"Closures", code:"for (var i = 0; i < 3; i++) {\n  setTimeout(() => console.log(i), 100);\n}\n// esperado: 0, 1, 2",
+  o:["var tem escopo de função: todos os callbacks enxergam o mesmo i, que vale 3 no final","O tempo 100 está em segundos e não em milissegundos","Arrow functions não conseguem acessar variáveis do for","setTimeout não pode ser usado dentro de laços"],c:0,
+  e:"Com var existe uma única variável i para todo o laço. Quando os callbacks rodam, i já vale 3, então imprime 3, 3, 3. Com let cada volta cria o seu próprio i.",f:"for (let i = 0; i < 3; i++) {"},
+ {tag:"Objetos", code:"const original = { nome: \"Ana\", nota: 7 };\nconst copia = original;\ncopia.nota = 10;\nconsole.log(original.nota); // esperado: 7",
+  o:["const impede alterar propriedades","Objetos não podem ter propriedades numéricas","A atribuição copia só a referência: original e copia são o mesmo objeto","console.log deveria receber copia"],c:2,
+  e:"Atribuir um objeto a outra variável não duplica o objeto, só copia a referência. Para uma cópia rasa, use o spread.",f:"const copia = { ...original };"},
+ {tag:"this", code:"const aluno = {\n  nome: \"Ana\",\n  saudar() {\n    return \"Oi, \" + this.nome;\n  }\n};\nconst fn = aluno.saudar;\nconsole.log(fn()); // esperado: Oi, Ana",
+  o:["Métodos de objeto não podem usar return","Ao extrair o método, ele perde o this e não aponta mais para aluno","nome deveria ser declarada com let","Falta chamar aluno.nome() com parênteses"],c:1,
+  e:"Chamar fn() solta o método do objeto, então this deixa de ser aluno. Use bind ou chame aluno.saudar() direto.",f:"const fn = aluno.saudar.bind(aluno);"},
+ {tag:"Ordenação", code:"const idades = [10, 9, 1, 100];\nidades.sort();\nconsole.log(idades); // esperado: [1, 9, 10, 100]",
+  o:["sort não altera o array original","O array precisa ser const para ordenar","Faltou passar o array como argumento do sort","Sem comparador, sort ordena como texto: o resultado é [1, 10, 100, 9]"],c:3,
+  e:"Por padrão sort converte os itens para string e compara letra por letra. Para números, passe uma função comparadora.",f:"idades.sort((a, b) => a - b);"},
+ {tag:"Carrinho", code:"const itens = [{ preco: 10 }, { preco: 20 }];\nconst total = itens.reduce((soma, item) => soma + item.preco);\nconsole.log(total); // esperado: 30",
+  o:["item.preco não existe em objetos","reduce só funciona com strings","Sem valor inicial, soma começa como o primeiro objeto e vira texto: \"[object Object]20\"","A função deveria usar multiplicação"],c:2,
+  e:"Sem o segundo argumento, o acumulador começa no primeiro elemento (um objeto). O + então concatena texto. Informe o valor inicial 0.",f:"itens.reduce((soma, item) => soma + item.preco, 0);"},
+ {tag:"Assíncrono", code:"async function salvarTodos(ids) {\n  ids.forEach(async (id) => {\n    await salvar(id);\n  });\n  console.log(\"Tudo salvo!\");\n}",
+  o:["forEach não espera as promises: a mensagem aparece antes dos salvamentos terminarem","async não pode ser usada em arrow functions","salvar deveria ser uma variável let","console.log precisa de await"],c:0,
+  e:"forEach ignora o retorno das callbacks async, então a função segue em frente sem esperar. Use for...of com await ou Promise.all.",f:"await Promise.all(ids.map((id) => salvar(id)));"}
+,
+ {tag:"Strings", code:"const nome = \"Ana\";\nconsole.log(\"Olá, ${nome}!\"); // esperado: Olá, Ana!",
+  o:["Aspas duplas não interpolam variáveis: é preciso usar crases (template string)","Falta declarar nome com let","console.log não imprime textos","O símbolo $ não existe em JavaScript"],c:0,
+  e:"A interpolação com ${} só funciona dentro de crases. Com aspas, o texto sai literal.",f:"console.log(`Olá, ${nome}!`);"},
+ {tag:"Sintaxe", code:"function ola() {\n  console.log(\"oi\");\n\nola();",
+  o:["console.log deveria vir depois da chamada","Falta fechar a chave } da função (SyntaxError)","Funções não podem ter nome curto","Falta return na função"],c:1,
+  e:"Toda chave aberta precisa ser fechada. Sem a } o código nem executa: SyntaxError.",f:"function ola() {\n  console.log(\"oi\");\n}"},
+ {tag:"Variáveis", code:"let total = 5;\nconsole.log(Total);",
+  o:["let não pode guardar números","console.log só aceita strings","total precisa de ponto e vírgula","JavaScript diferencia maiúsculas de minúsculas: Total não existe"],c:3,
+  e:"Total e total são nomes diferentes. Usar Total gera ReferenceError.",f:"console.log(total);"},
+ {tag:"Variáveis", code:"let x = 10;\nlet x = 20;\nconsole.log(x);",
+  o:["let não pode ser declarada duas vezes com o mesmo nome no mesmo escopo","20 é um valor inválido","console.log não imprime let","Falta usar const na segunda linha"],c:0,
+  e:"Redeclarar com let gera SyntaxError. Para mudar o valor, basta atribuir sem a palavra let.",f:"x = 20;"},
+ {tag:"Arrays", code:"const pares = [1, 2, 3, 4].filter((n) => {\n  n % 2 === 0;\n});\nconsole.log(pares); // esperado: [2, 4]",
+  o:["filter só funciona com strings","Com chaves é preciso usar return; sem ele o filtro recebe undefined e retorna []","n % 2 calcula o quociente","pares deveria ser let"],c:1,
+  e:"Arrow function com chaves não retorna nada sozinha. Sem return, todo item é descartado.",f:"filter((n) => n % 2 === 0)"},
+ {tag:"Condicionais", code:"const dia = 1;\nswitch (dia) {\n  case 1:\n    console.log(\"Segunda\");\n  case 2:\n    console.log(\"Terça\");\n}\n// esperado: só Segunda",
+  o:["case não aceita números","dia deveria ser string","Falta break: a execução cai para o próximo case e imprime as duas","switch exige a palavra else"],c:2,
+  e:"Sem break, o switch continua executando os cases seguintes (fall-through).",f:"console.log(\"Segunda\");\n    break;"},
+ {tag:"Objetos", code:"const usuario = { nome: \"Ana\" };\nconsole.log(usuario.endereco.rua);",
+  o:["rua deveria ser uma string","Objetos não aceitam ponto","endereco é undefined, e ler rua dele gera TypeError (use ?.)","nome precisa vir depois"],c:2,
+  e:"Acessar propriedade de undefined quebra o programa. O encadeamento opcional ?. evita o erro.",f:"console.log(usuario.endereco?.rua);"},
+ {tag:"Escopo", code:"try {\n  const dados = JSON.parse(texto);\n} catch (e) {\n  console.log(\"JSON inválido\");\n}\nconsole.log(dados.nome);",
+  o:["JSON.parse não existe","catch precisa de dois parâmetros","dados.nome deveria ser dados[nome]","dados foi declarada dentro do try (escopo de bloco) e não existe fora dele"],c:3,
+  e:"const e let valem só dentro do bloco. Declare a variável antes do try e atribua dentro dele.",f:"let dados;\ntry {\n  dados = JSON.parse(texto);\n}"},
+ {tag:"Armadilhas", code:"const nums = [\"1\", \"2\", \"3\"].map(parseInt);\nconsole.log(nums); // esperado: [1, 2, 3]",
+  o:["map passa (valor, índice) e parseInt usa o índice como base: o resultado é [1, NaN, NaN]","parseInt só converte números decimais","O array deveria ter números","map não aceita funções prontas"],c:0,
+  e:"parseInt recebe o segundo argumento como base numérica. Passe uma arrow ou use Number.",f:"[\"1\", \"2\", \"3\"].map(Number);"},
+ {tag:"Armadilhas", code:"function contar(total) {\n  total = total || 10;\n  return total;\n}\nconsole.log(contar(0)); // esperado: 0",
+  o:["return não pode vir depois da atribuição","0 é falsy, então || usa o padrão 10; o certo é ?? ou parâmetro padrão","total deveria ser const","Funções não aceitam números como argumento"],c:1,
+  e:"O || trata 0, \"\" e false como ausentes. O ?? só troca null e undefined.",f:"total = total ?? 10;"}
+];
+
+const KEY = "cacabugs-v2";
+const DIFF = [1,1,1,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,3,3,1,1,1,1,2,2,2,3,3,3];
+const XPV = {1:10, 2:20, 3:30}, DN = {1:"Fácil", 2:"Intermediário", 3:"Avançado"}, STAR = {1:"⭐", 2:"⭐⭐", 3:"⭐⭐⭐"};
+const RANKS = ["Estagiário","Dev Júnior","Dev Pleno","Dev Sênior","Tech Lead","Arquiteto de Software"];
+let S = {xp:0, p:{}, streak:0, att:0, hit:0}, cur = 0, answered = false, filter = "all", lf = 0, resetArmed = false;
+[QUESTIONS[12], QUESTIONS[13]] = [QUESTIONS[13], QUESTIONS[12]];
+const ORDER = QUESTIONS.map((_, i) => i).sort((a, b) => DIFF[a] - DIFF[b] || a - b);
+const CNT = {1:0, 2:0, 3:0}; DIFF.forEach(d => CNT[d]++);
+const ord = i => ORDER.filter(k => DIFF[k] === DIFF[i]).indexOf(i) + 1;
+const $ = id => document.getElementById(id);
+let ACC = {users:{}, cur:null};
+try { ACC = Object.assign(ACC, JSON.parse(localStorage.getItem("cacabugs-acc") || "{}")); } catch (e) {}
+if (!ACC.users || typeof ACC.users !== "object") ACC.users = {};
+if (ACC.cur && !ACC.users[ACC.cur]) ACC.cur = null;
+const keyFor = n => n ? KEY + ":" + n : KEY;
+function loadS(){ S = {xp:0, p:{}, streak:0, att:0, hit:0, l:{}}; try { const r = localStorage.getItem(keyFor(ACC.cur)); if (r) S = Object.assign(S, JSON.parse(r)); } catch (e) {} S.l = S.l || {}; }
+function saveAcc(){ try { localStorage.setItem("cacabugs-acc", JSON.stringify(ACC)); } catch (e) {} }
+loadS();
+S.l = S.l || {};
+function save(){ try { localStorage.setItem(keyFor(ACC.cur), JSON.stringify(S)); } catch (e) {} cloudPush(); }
+const lvlOf = x => Math.floor(x / 100) + 1;
+const rankOf = x => RANKS[Math.min(lvlOf(x) - 1, RANKS.length - 1)];
+const st = i => (S.p[i] && S.p[i].s) || "todo";
+
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function hl(src){
+  const re = /(\/\/.*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`)|\b(\d+(?:\.\d+)?)\b|\b(function|return|const|let|var|if|else|for|while|async|await|new|true|false|null|undefined|NaN|of|switch|case|break|default|try|catch|throw|this)\b|\b([A-Za-z_$][\w$]*)(?=\()|([=+\-*\/%<>!&|?]+)/g;
+  let out = "", last = 0, m;
+  while ((m = re.exec(src))) {
+    out += esc(src.slice(last, m.index));
+    const w = m[4], cls = m[1] ? "c" : m[2] ? "s" : m[3] ? "n" : w ? (/^(const|let|var|function|async|this)$/.test(w) ? "d" : /^(true|false|null|undefined|NaN)$/.test(w) ? "n" : "k") : m[5] ? "f" : "o";
+    out += '<span class="t-' + cls + '">' + esc(m[0]) + '</span>';
+    last = re.lastIndex;
+  }
+  return out + esc(src.slice(last));
+}
+
+function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function lines(h){ return h.split("\n").map(l => '<span class="ln">' + l + '</span>').join(""); }
+function show(id){ ["board","play","learn","lesson","account"].forEach(k => $(k).classList.toggle("hide", k !== id)); $("nGame").classList.toggle("on", id === "board" || id === "play"); $("nLearn").classList.toggle("on", id === "learn" || id === "lesson"); $("nAcc").classList.toggle("on", id === "account"); window.scrollTo(0, 0); }
+function nextPhase(){ return ORDER.find(i => st(i) !== "done") ?? ORDER[0]; }
+function nextIn(){ const k = ORDER.indexOf(cur) + 1; return k < ORDER.length ? ORDER[k] : -1; }
+function hudp(){ $("streak").textContent = "🔥 Sequência: " + S.streak; }
+
+function board(){
+  show("board");
+  const n = QUESTIONS.length, done = QUESTIONS.filter((_, i) => st(i) === "done").length;
+  const lv = lvlOf(S.xp), into = S.xp % 100, acc = S.att ? Math.round(S.hit / S.att * 100) : 0;
+  $("rank").textContent = (ACC.cur ? "@" + ACC.cur : "Convidado") + " · Desafios: " + done + "/" + n + " · Aulas: " + Object.keys(S.l).length + "/" + LESSONS.length;
+  $("lvl").textContent = "Nível " + lv + " · " + rankOf(S.xp);
+  $("xptxt").textContent = into + "/100 XP";
+  $("xpbar").style.width = into + "%";
+  $("stats").innerHTML = '<span class="pill">✅ ' + done + '/' + n + '</span><span class="pill">⚡ ' + S.xp + ' XP total</span><span class="pill">🎯 ' + acc + '% de acerto</span>';
+  $("cont").textContent = done === n ? "🏆 Tudo concluído! Revisar desde o início" : (S.att ? "Continuar: " + DN[DIFF[nextPhase()]] + " " + ord(nextPhase()) : "Começar pelo nível fácil");
+  const inL = i => lf === 0 || DIFF[i] === lf;
+  const cnt = k => ORDER.filter(i => inL(i) && (k === "all" || st(i) === k)).length;
+  $("ltabs").innerHTML = [[0,"Todos"],[1,"🟢 Fácil"],[2,"🟡 Intermediário"],[3,"🔴 Avançado"]]
+    .map(t => '<button class="tab' + (lf === t[0] ? ' on' : '') + '" data-l="' + t[0] + '">' + t[1] + ' (' + (t[0] ? CNT[t[0]] : n) + ')</button>').join("");
+  $("tabs").innerHTML = [["all","Todas"],["todo","Pendentes"],["fail","Para refazer"],["done","Concluídas"]]
+    .map(t => '<button class="tab' + (filter === t[0] ? ' on' : '') + '" data-f="' + t[0] + '">' + t[1] + ' (' + cnt(t[0]) + ')</button>').join("");
+  const chip = i => { const s = st(i), t = (S.p[i] || {}).t || 0;
+    return s === "done" ? '<span class="chip done">✅ Concluída</span>' : s === "fail" ? '<span class="chip fail">❌ Refazer (' + t + ')</span>' : '<span class="chip">⏳ Pendente</span>'; };
+  $("list").innerHTML = ORDER.filter(i => inL(i) && (filter === "all" || st(i) === filter))
+    .map(i => '<button class="row" data-i="' + i + '"><span class="num">' + String(ord(i)).padStart(2, "0") + '</span><span class="rt"><b>' + QUESTIONS[i].tag + '</b><small>' + STAR[DIFF[i]] + ' ' + DN[DIFF[i]] + ' · +' + XPV[DIFF[i]] + ' XP</small></span>' + chip(i) + '</button>').join("")
+    || '<p class="sub">Nenhuma tarefa nesta lista.</p>';
+}
+
+function play(i){
+  cur = i; answered = false;
+  const q = QUESTIONS[i];
+  show("play"); hudp();
+  $("pinfo").textContent = DN[DIFF[i]] + " · fase " + ord(i) + " de " + CNT[DIFF[i]];
+  $("tag").textContent = q.tag + (st(i) === "done" ? " · revisão (sem XP)" : " · +" + XPV[DIFF[i]] + " XP");
+  $("fname").textContent = "fase-" + String(i + 1).padStart(2, "0") + ".js";
+  $("code").innerHTML = lines(hl(q.code));
+  $("fb").className = "fb"; $("fb").innerHTML = "";
+  $("next").classList.add("hide");
+  const box = $("opts"); box.innerHTML = "";
+  shuffle(q.o.map((t, k) => ({t, ok: k === q.c}))).forEach((o, n) => {
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.textContent = String.fromCharCode(65 + n) + ") " + o.t;
+    b.dataset.ok = o.ok ? "1" : "";
+    b.onclick = () => answer(b, o.ok);
+    box.appendChild(b);
+  });
+}
+
+function answer(btn, ok){
+  if (answered) return;
+  answered = true;
+  const q = QUESTIONS[cur], p = S.p[cur] || {s:"todo", t:0}, was = p.s, old = lvlOf(S.xp);
+  p.t++; S.att++;
+  document.querySelectorAll(".opt").forEach(b => { b.disabled = true; if (b.dataset.ok) b.classList.add("ok"); });
+  let head;
+  if (ok){
+    S.hit++; S.streak++;
+    if (was !== "done"){
+      const gain = Math.round(XPV[DIFF[cur]] * (p.t === 1 ? 1 : 0.5)) + Math.min(S.streak - 1, 5) * 2;
+      S.xp += gain; p.s = "done";
+      head = '<b class="ok">✅ Correto! +' + gain + ' XP' + (p.t > 1 ? ' (refazer vale metade)' : '') + '</b>';
+    } else head = '<b class="ok">✅ Correto! (revisão, sem XP)</b>';
+  } else {
+    btn.classList.add("bad"); S.streak = 0;
+    if (was !== "done") p.s = "fail";
+    head = '<b class="bad">❌ Não foi dessa vez. A tarefa fica marcada para refazer.</b>';
+  }
+  S.p[cur] = p; save(); hudp();
+  const lv = lvlOf(S.xp);
+  const up = lv > old ? '<p><b>🎉 Subiu para o nível ' + lv + ': ' + rankOf(S.xp) + '!</b></p>' : "";
+  const fb = $("fb");
+  fb.innerHTML = head + "<p></p>" + up + '<div class="lbl">Correção</div><pre><code></code></pre>';
+  fb.querySelector("p").textContent = q.e;
+  fb.querySelector("code").innerHTML = lines(hl(q.f));
+  fb.classList.add("show");
+  const nx = $("next");
+  nx.textContent = nextIn() >= 0 ? "Próxima fase →" : "Voltar ao painel";
+  nx.classList.remove("hide");
+}
+
+$("next").onclick = () => { const n = nextIn(); n >= 0 ? play(n) : board(); };
+$("back").onclick = board;
+$("cont").onclick = () => play(nextPhase());
+const LESSONS = [
+ {t:"Variáveis", x:"Variáveis guardam valores. Use const para o que não muda e let para o que muda. Evite var.",
+  code:"const nome = \"Ana\";\nlet pontos = 0;\npontos = pontos + 10;\nconsole.log(nome, pontos); // Ana 10",
+  q:"qual palavra declara uma variável que pode ser reatribuída?",o:["const","let","fixed","static"],c:1,e:"let permite reatribuir, const não."},
+ {t:"Tipos de dados", x:"Os tipos básicos são string (texto), number, boolean (true ou false), undefined e null. Arrays e objetos aparecem como object. O typeof mostra o tipo.",
+  code:"console.log(typeof \"oi\");   // string\nconsole.log(typeof 42);     // number\nconsole.log(typeof true);   // boolean\nconsole.log(typeof [1, 2]); // object",
+  q:"o que typeof 3.14 retorna?",o:["decimal","float","number","double"],c:2,e:"Em JS inteiros e decimais são do tipo number."},
+ {t:"Operadores", x:"Aritméticos: + - * / % **. Comparação: === (igual e mesmo tipo), !==, <, >. Lógicos: && (e), || (ou), ! (não). Prefira === a ==.",
+  code:"console.log(7 % 2);         // 1 (resto)\nconsole.log(2 ** 3);        // 8\nconsole.log(5 === \"5\");     // false\nconsole.log(true && false); // false",
+  q:"qual é o resultado de 10 % 3?",o:["3","1","0","3.33"],c:1,e:"% devolve o resto da divisão: 10 dividido por 3 sobra 1."},
+ {t:"Condicionais", x:"if executa um bloco quando a condição é verdadeira, else cobre o contrário e else if testa outras opções.",
+  code:"const nota = 7;\nif (nota >= 7) {\n  console.log(\"Aprovado\");\n} else if (nota >= 5) {\n  console.log(\"Recuperação\");\n} else {\n  console.log(\"Reprovado\");\n}",
+  q:"com nota = 6, o que é impresso?",o:["Aprovado","Recuperação","Reprovado","Nada"],c:1,e:"6 não é >= 7, mas é >= 5."},
+ {t:"Laços de repetição", x:"for repete com um contador e while repete enquanto a condição for verdadeira. Cuidado com laços infinitos.",
+  code:"for (let i = 1; i <= 3; i++) {\n  console.log(\"Volta \" + i);\n}\nlet n = 3;\nwhile (n > 0) {\n  n--;\n}",
+  q:"quantas vezes o for acima roda?",o:["2","3","4","Infinitas"],c:1,e:"i vale 1, 2 e 3: três voltas."},
+ {t:"Funções", x:"Funções agrupam código reutilizável. Recebem parâmetros e devolvem valor com return. A arrow function é uma forma curta.",
+  code:"function dobro(x) {\n  return x * 2;\n}\nconst triplo = (x) => x * 3;\nconsole.log(dobro(4));  // 8\nconsole.log(triplo(4)); // 12",
+  q:"o que uma função devolve se não tiver return?",o:["0","null","undefined","texto vazio"],c:2,e:"Sem return o resultado é undefined."},
+ {t:"Arrays", x:"Arrays guardam listas. Os índices começam em 0. Métodos úteis: push, pop, map, filter e includes.",
+  code:"const frutas = [\"maçã\", \"uva\"];\nfrutas.push(\"pera\");\nconsole.log(frutas[0]);     // maçã\nconsole.log(frutas.length); // 3\nconst caixa = frutas.map((f) => f.toUpperCase());",
+  q:"qual é o índice do primeiro item de um array?",o:["1","0","-1","Depende"],c:1,e:"A contagem começa em zero."},
+ {t:"Objetos", x:"Objetos agrupam dados em pares chave e valor. Acesse com ponto ou colchetes.",
+  code:"const aluno = { nome: \"Ana\", nota: 9 };\naluno.nota = 10;\nconsole.log(aluno.nome);    // Ana\nconsole.log(aluno[\"nota\"]); // 10",
+  q:"como ler a propriedade nome de aluno?",o:["aluno->nome","aluno.nome","aluno(nome)","aluno::nome"],c:1,e:"Use aluno.nome ou aluno[\"nome\"]."}
+];
+let li = 0;
+function learn(){
+  show("learn");
+  $("llist").innerHTML = LESSONS.map((l, i) => '<button class="row" data-i="' + i + '"><span class="num">' + String(i + 1).padStart(2, "0") + '</span><span class="rt"><b>' + l.t + '</b><small>+15 XP no quiz</small></span><span class="chip' + (S.l[i] ? ' done' : '') + '">' + (S.l[i] ? '✅ Feita' : '📘 Nova') + '</span></button>').join("");
+}
+function lesson(i){
+  li = i; show("lesson");
+  const l = LESSONS[i];
+  $("ltag").textContent = "Aula " + (i + 1) + " de " + LESSONS.length;
+  $("ltitle").textContent = l.t; $("ltext").textContent = l.x;
+  $("lfile").textContent = "aula-" + String(i + 1).padStart(2, "0") + ".js";
+  $("lcode").innerHTML = lines(hl(l.code));
+  $("lq").textContent = "Quiz rápido: " + l.q;
+  $("lfb").className = "fb"; $("lfb").textContent = ""; $("lnext").classList.add("hide");
+  const box = $("lopts"); box.innerHTML = "";
+  l.o.forEach((t, k) => { const b = document.createElement("button"); b.className = "opt"; b.textContent = t; b.onclick = () => lanswer(b, k === l.c); box.appendChild(b); });
+}
+function lanswer(b, ok){
+  if (!ok){ b.classList.add("bad"); b.disabled = true; return; }
+  const l = LESSONS[li];
+  document.querySelectorAll("#lopts .opt").forEach(x => x.disabled = true);
+  b.classList.add("ok");
+  let msg = "✅ Isso mesmo! " + l.e;
+  if (!S.l[li]){ S.l[li] = 1; S.xp += 15; msg += " +15 XP"; save(); }
+  const f = $("lfb"); f.textContent = msg; f.classList.add("show");
+  const nx = $("lnext"); nx.textContent = li + 1 < LESSONS.length ? "Próxima aula →" : "Ir para os desafios 🎮";
+  nx.classList.remove("hide");
+}
+$("nGame").onclick = board; $("nLearn").onclick = learn; $("lback").onclick = learn;
+$("llist").onclick = e => { const r = e.target.closest(".row"); if (r) lesson(+r.dataset.i); };
+$("lnext").onclick = () => li + 1 < LESSONS.length ? lesson(li + 1) : board();
+$("ltabs").onclick = e => { const b = e.target.closest(".tab"); if (b){ lf = +b.dataset.l; board(); } };
+const cloud = {ref:null, id:null, db:null, user:null, me:null, t:null, st:"local", rank:[]};
+function cloudPush(){
+  if (!cloud.ref) return;
+  clearTimeout(cloud.t);
+  cloud.t = setTimeout(async () => {
+    try {
+      await cloud.ref.set(Object.assign({}, S, {ts: Date.now()}));
+      if (S.rk) await cloud.db.collection("ranking").doc(cloud.id).set({nick: ACC.cur || (cloud.me && cloud.me.name) || "Dev", xp: S.xp, done: QUESTIONS.filter((_, i) => st(i) === "done").length, aulas: Object.keys(S.l).length, ts: Date.now()});
+      cloud.st = "ok";
+    } catch (e) { cloud.st = "err"; }
+    accUI();
+  }, 800);
+}
+function mergeS(r){
+  Object.keys(r.p || {}).forEach(k => { const a = S.p[k], b = r.p[k];
+    if (!a || (b.s === "done" && a.s !== "done")) S.p[k] = Object.assign({}, b, {t: Math.max(b.t || 0, a ? a.t || 0 : 0)});
+    else a.t = Math.max(a.t || 0, b.t || 0); });
+  Object.keys(r.l || {}).forEach(k => S.l[k] = 1);
+  S.xp = Math.max(S.xp, r.xp || 0); S.att = Math.max(S.att, r.att || 0); S.hit = Math.max(S.hit, r.hit || 0);
+  if (S.rk === undefined && r.rk !== undefined) S.rk = r.rk;
+}
+async function cloudInit(){
+  try {
+    if (typeof claude === "undefined") return;
+    const user = await claude.use("user"), db = await claude.use("db");
+    if (!user || !db) return;
+    const id = await user.id();
+    if (!id) return;
+    Object.assign(cloud, {db, user, id, me: await user.me()});
+    await cloudBind(true);
+    db.collection("ranking").orderBy("xp", "desc").limit(20).onSnapshot(s => { cloud.rank = s.docs.map(d => Object.assign({id: d.id}, d.data())); rkUI(); }, () => {});
+  } catch (e) { if (cloud.ref) cloud.st = "err"; }
+  accUI();
+  if (!$("board").classList.contains("hide")) board();
+}
+async function cloudBind(first){
+  if (!cloud.id) return;
+  clearTimeout(cloud.t); cloud.ref = null;
+  const col = cloud.db.collection("data/users/" + cloud.id);
+  if (first) { try { const a = await col.doc("accounts").get(); if (a.exists) { const u = a.data().users || {}; Object.keys(u).forEach(k => { if (!ACC.users[k]) ACC.users[k] = u[k]; }); saveAcc(); } } catch (e) {} }
+  const ref = col.doc("p_" + (ACC.cur || "guest"));
+  try { const snap = await ref.get(); if (snap.exists) mergeS(snap.data()); cloud.st = "ok"; } catch (e) { cloud.st = "err"; }
+  cloud.ref = ref;
+  try { localStorage.setItem(keyFor(ACC.cur), JSON.stringify(S)); } catch (e) {}
+  cloudPush();
+}
+function cloudAccPush(){ if (cloud.id) cloud.db.collection("data/users/" + cloud.id).doc("accounts").set({users: ACC.users}).catch(() => {}); }
+let acMode = "in", delArmed = false;
+function acMsg(t){ $("acErr").textContent = t || ""; }
+function setMode(m){
+  acMode = m; acMsg("");
+  document.querySelectorAll("#acTabs .tab").forEach(b => b.classList.toggle("on", b.dataset.m === m));
+  $("fPass2w").classList.toggle("hide", m !== "up");
+  $("fMoveW").classList.toggle("hide", m !== "up" || !(ACC.cur === null && (S.att || S.xp)));
+  $("acGo").textContent = m === "up" ? "Criar conta" : "Entrar";
+}
+async function hashPw(pw, salt){
+  const enc = new TextEncoder(), k = await crypto.subtle.importKey("raw", enc.encode(pw), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({name:"PBKDF2", salt: enc.encode(salt), iterations: 100000, hash:"SHA-256"}, k, 256);
+  return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+async function acSubmit(){
+  const u = $("fUser").value.trim().toLowerCase(), p = $("fPass").value;
+  if (!/^[a-z0-9_]{3,20}$/.test(u)) return acMsg("Usuário: 3 a 20 letras minúsculas, números ou _.");
+  if (p.length < 6) return acMsg("A senha precisa ter pelo menos 6 caracteres.");
+  if (!(window.crypto && crypto.subtle)) return acMsg("Este navegador não suporta proteção de senha.");
+  $("acGo").disabled = true;
+  try {
+    if (acMode === "up"){
+      if (ACC.users[u]) return acMsg("Esse usuário já existe.");
+      if (p !== $("fPass2").value) return acMsg("As senhas não conferem.");
+      const salt = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, "0")).join("");
+      ACC.users[u] = {salt, hash: await hashPw(p, salt), at: Date.now()};
+      const keep = $("fMove").checked && ACC.cur === null && (S.att || S.xp) ? S : null;
+      ACC.cur = u; saveAcc(); loadS();
+      if (keep) S = JSON.parse(JSON.stringify(keep));
+    } else {
+      const a = ACC.users[u];
+      if (!a || (await hashPw(p, a.salt)) !== a.hash) return acMsg("Usuário ou senha incorretos.");
+      ACC.cur = u; saveAcc(); loadS();
+    }
+    $("fPass").value = ""; $("fPass2").value = "";
+    save(); cloudAccPush();
+    await cloudBind();
+    accUI();
+  } finally { $("acGo").disabled = false; }
+}
+async function logout(){
+  ACC.cur = null; saveAcc(); loadS();
+  await cloudBind(); accUI();
+}
+function accUI(){
+  const inn = !!ACC.cur, on = !!cloud.ref;
+  $("acOut").classList.toggle("hide", inn); $("acIn").classList.toggle("hide", !inn);
+  if (!inn) setMode(acMode);
+  const nm = ACC.cur || "";
+  $("nAcc").textContent = inn ? "👤 " + nm : "👤 Conta";
+  $("acName").innerHTML = '<span class="av">' + esc(nm.charAt(0).toUpperCase()) + '</span>' + esc(nm);
+  $("acSt").textContent = !on ? "💾 Neste aparelho" : cloud.st === "err" ? "⚠️ Falha ao sincronizar" : "☁️ Sincronizado";
+  $("acInfo").textContent = on ? "Seu progresso fica salvo nesta conta." : "Seu progresso fica salvo nesta conta, neste aparelho (no navegador).";
+  
+  $("rkT").style.display = on ? "" : "none";
+  rkUI();
+}
+$("acTabs").onclick = e => { const b = e.target.closest(".tab"); if (b) setMode(b.dataset.m); };
+$("acGo").onclick = acSubmit;
+["fUser", "fPass", "fPass2"].forEach(id => { $(id).onkeydown = e => { if (e.key === "Enter") acSubmit(); }; });
+$("acOutBtn").onclick = logout;
+$("acDel").onclick = async () => {
+  if (!delArmed){ delArmed = true; $("acDel").textContent = "Clique de novo para excluir (apaga o progresso)"; setTimeout(() => { delArmed = false; $("acDel").textContent = "Excluir conta"; }, 3500); return; }
+  delArmed = false; $("acDel").textContent = "Excluir conta";
+  const u = ACC.cur;
+  if (cloud.id) { cloud.db.collection("data/users/" + cloud.id).doc("p_" + u).delete().catch(() => {}); }
+  delete ACC.users[u]; try { localStorage.removeItem(keyFor(u)); } catch (e) {}
+  cloudAccPush(); await logout();
+};
+async function rkUI(){
+  const box = $("rkList");
+  if (!cloud.ref){ box.innerHTML = ""; return; }
+  const rows = cloud.rank;
+  if (!rows.length){ box.innerHTML = '<p class="sub">Ninguém no ranking ainda. Marque a opção acima para ser o primeiro!</p>'; return; }
+  let ps = {};
+  try { ps = await cloud.user.profiles(rows.map(r => r.id)); } catch (e) {}
+  box.innerHTML = rows.map((r, k) => '<div class="rk' + (r.id === cloud.id ? ' me' : '') + '"><span>' + (["🥇","🥈","🥉"][k] || (k + 1) + "º") + '</span><b>' + esc(r.nick || "Dev anônimo") + '</b><small>Nv ' + lvlOf(r.xp || 0) + ' · ' + (r.xp || 0) + ' XP</small></div>').join("");
+}
+if ($("acRank")) $("acRank").onchange = async e => {
+  S.rk = e.target.checked; save();
+  if (!S.rk && cloud.ref) { try { await cloud.db.collection("ranking").doc(cloud.id).delete(); } catch (x) {} }
+};
+$("nAcc").onclick = () => { show("account"); accUI(); };
+accUI();
+cloudInit();
+$("tabs").onclick = e => { const b = e.target.closest(".tab"); if (b){ filter = b.dataset.f; board(); } };
+$("list").onclick = e => { const r = e.target.closest(".row"); if (r) play(+r.dataset.i); };
+$("reset").onclick = () => {
+  if (!resetArmed){ resetArmed = true; $("reset").textContent = "Clique de novo para confirmar"; setTimeout(() => { resetArmed = false; $("reset").textContent = "Zerar progresso"; }, 3000); return; }
+  resetArmed = false; $("reset").textContent = "Zerar progresso";
+  S = {xp:0, p:{}, streak:0, att:0, hit:0, l:{}}; save(); board();
+};
+board();
+</script>
+</body>
+</html>
